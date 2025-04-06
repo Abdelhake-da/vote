@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Vote for Your Favorite Photos</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Bootstrap 5 CSS from CDN --> <!-- Updated to Bootstrap 5 for modern components -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Google Fonts --> <!-- Added modern fonts for better typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Font Awesome for icons --> <!-- Updated Font Awesome import -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root { /* Added CSS variables for consistent theming */
+      --primary-color: #4361ee;
+      --primary-hover: #3a56d4;
+      --secondary-color: #7209b7;
+      --accent-color: #f72585;
+      --light-bg: #f8f9fa;
+      --dark-text: #212529;
+      --success-color: #4cc9f0;
+      --card-shadow: rgba(0, 0, 0, 0.1) 0px 4px 12px;
+      --hover-shadow: rgba(0, 0, 0, 0.15) 0px 8px 24px;
+    }
+    
+    body { /* Applied modern font to entire body */
+      font-family: 'Poppins', sans-serif;
+      background-color: var(--light-bg);
+      color: var(--dark-text);
+    }
+    
+    .page-header { /* Created stylish header section */
+      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+      color: white;
+      padding: 2.5rem 0;
+      border-radius: 0 0 20px 20px;
+      margin-bottom: 2rem;
+      box-shadow: var(--card-shadow);
+    }
+    
+    .page-title { /* Styled the main heading */
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+    
+    .vote-progress { /* Created custom progress bar styling */
+      height: 10px;
+      border-radius: 5px;
+      margin-top: 10px;
+      background-color: rgba(255, 255, 255, 0.3);
+      overflow: hidden; /* Added to ensure progress bar is contained */
+    }
+    
+    .vote-progress .progress-bar { /* Styled the progress bar fill */
+      background: linear-gradient(90deg, var(--success-color), var(--accent-color));
+      border-radius: 5px;
+      transition: width 0.5s ease-in-out;
+      height: 100%; /* Ensure the bar fills the container height */
+      min-width: 0%; /* Ensure the bar can be completely empty */
+    }
+    
+    .vote-count-display { /* Styled the vote counter text */
+      font-weight: 500;
+      font-size: 1.1rem;
+      color: white;
+      margin-bottom: 5px;
+    }
+    
+    .photo-card { /* Styled the photo cards */
+      border: none;
+      border-radius: 15px;
+      overflow: hidden;
+      transition: all 0.3s ease;
+      box-shadow: var(--card-shadow);
+      height: 100%;
+    }
+    
+    .photo-card:hover { /* Added hover effect to cards */
+      transform: translateY(-5px);
+      box-shadow: var(--hover-shadow);
+    }
+    
+    .card-img-top { /* Improved image display */
+      height: 200px;
+      object-fit: cover;
+    }
+    
+    .card-body { /* Better spacing in card body */
+      padding: 1.5rem;
+    }
+    
+    .card-title { /* Styled card titles */
+      font-weight: 600;
+      margin-bottom: 0.75rem;
+    }
+    
+    .vote-btn { /* Styled voting buttons */
+      width: 100%;
+      border-radius: 50px;
+      padding: 0.6rem 1rem;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      margin-top: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    
+    .vote-btn:not(.voted) { /* Styling for unvoted buttons */
+      background-color: white;
+      color: var(--primary-color);
+      border: 2px solid var(--primary-color);
+    }
+    
+    .vote-btn:not(.voted):hover:not(:disabled) { /* Hover effect for unvoted buttons */
+      background-color: var(--primary-color);
+      color: white;
+      transform: scale(1.03);
+    }
+    
+    .voted { /* Styling for voted buttons */
+      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+      border: none;
+      color: white;
+    }
+    
+    .voted:hover { /* Hover effect for voted buttons */
+      background: linear-gradient(135deg, var(--primary-hover), var(--secondary-color));
+      transform: scale(1.03);
+    }
+    
+    .vote-btn:disabled { /* Styling for disabled buttons */
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    
+    .vote-btn i { /* Icon styling */
+      font-size: 1rem;
+    }
+    
+    /* Animation for vote button click */ /* Added animation effects */
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+    
+    .pulse { /* Applied animation class */
+      animation: pulse 0.5s;
+    }
+    
+    /* Responsive adjustments */ /* Improved mobile experience */
+    @media (max-width: 768px) {
+      .card-img-top {
+        height: 180px;
+      }
+      
+      .page-header {
+        border-radius: 0 0 15px 15px;
+        padding: 2rem 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Header section with gradient background --> <!-- Created new header section -->
+  <div class="page-header">
+    <div class="container text-center">
+      <h1 class="page-title mb-3">Vote for Your Favorite Photos</h1>
+      <div class="vote-count-display">You have used <span id="user-vote-count">{{ vote_count }}</span> of {{ max_votes }} votes</div>
+      <!-- Added progress bar for visual representation of votes -->
+      <div class="vote-progress">
+        <!-- Initial width set with inline style for server-side rendering -->
+        <div class="progress-bar" role="progressbar" 
+             style="width: {% if vote_count and max_votes %}{{ vote_count|floatformat:0 }}{% else %}0{% endif %}%;" 
+             aria-valuenow="{{ vote_count|default:0 }}" aria-valuemin="0" aria-valuemax="{{ max_votes }}"></div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Main content area -->
+  <div class="container my-4">
+    <div class="row g-4"> <!-- Updated with Bootstrap 5 gutter class -->
+      {% for photo in photos %}
+      <div class="col-lg-4 col-md-6 mb-4"> <!-- Improved responsive grid -->
+        <div class="photo-card card h-100"> <!-- Added height 100% for equal height cards -->
+          <img src="{{ photo.image.url }}" class="card-img-top" alt="{{ photo.title }}">
+          <div class="card-body d-flex flex-column"> <!-- Used flex column for better spacing -->
+            <h5 class="card-title">{{ photo.title }}</h5>
+            <p class="card-text flex-grow-1">{{ photo.description }}</p> <!-- Made description take available space -->
+            
+            <!-- Vote button with improved styling -->
+            <form method="post" class="vote-form mt-auto"> <!-- Pushed button to bottom of card -->
+              {% csrf_token %}
+              <input type="hidden" name="photo_id" value="{{ photo.id }}">
+              {% if photo.id in voted_photo_ids %}
+                <!-- User has already voted for this image -->
+                <button type="submit" class="btn vote-btn voted" data-photo-id="{{ photo.id }}" 
+                        {% if vote_count >= max_votes and photo.id not in voted_photo_ids %}disabled{% endif %}>
+                  <i class="fas fa-check-circle"></i> Voted - Click to Remove
+                </button>
+              {% else %}
+                <!-- User has not voted for this image -->
+                <button type="submit" class="btn vote-btn" data-photo-id="{{ photo.id }}"
+                        {% if vote_count >= max_votes %}disabled{% endif %}>
+                  <i class="fas fa-heart"></i> Vote for This Photo
+                </button>
+              {% endif %}
+            </form>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  
+  <!-- Bootstrap 5 JS and dependencies --> <!-- Updated to Bootstrap 5 JS -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  
+  <script>
+    // JavaScript to handle AJAX voting with improved animations
+    $(document).ready(function() {
+      // Function to handle vote button click
+      $('.vote-form').on('submit', function(e) {
+        e.preventDefault();  // Prevent the form from submitting normally
+        
+        var form = $(this);  // Get the form element
+        var photoId = form.find('input[name="photo_id"]').val();  // Get the photo ID
+        var button = form.find('button');  // Get the button element
+        var isVoted = button.hasClass('voted');  // Check if already voted
+        
+        // Add pulse animation to button
+        button.addClass('pulse');  // Add animation class
+        setTimeout(function() {
+          button.removeClass('pulse');  // Remove animation class after animation completes
+        }, 500);
+        
+        // Send AJAX request to toggle vote
+        $.ajax({
+          url: '',  // Current URL (vote_page)
+          type: 'POST',  // HTTP method
+          data: form.serialize(),  // Form data
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest'  // Mark as AJAX request
+          },
+          success: function(response) {
+            // Update the button appearance based on vote status
+            if (response.vote_added) {
+              // Vote was added
+              button.addClass('voted');  // Add voted class
+              button.html('<i class="fas fa-check-circle"></i> Voted - Click to Remove');  // Update button text with new icon
+            } else {
+              // Vote was removed
+              button.removeClass('voted');  // Remove voted class
+              button.html('<i class="fas fa-heart"></i> Vote for This Photo');  // Update button text with new icon
+            }
+            
+            // Update the vote count display
+            $('#user-vote-count').text(response.vote_count);  // Update vote count
+            
+            // Update progress bar width
+            var maxVotes = {{ max_votes }};  // Get max votes from template
+            var voteCount = response.vote_count;  // Get current vote count
+            var progressPercent = Math.min((voteCount / maxVotes) * 100, 100);  // Calculate percentage, capped at 100%
+            
+            // Update progress bar width with the calculated percentage
+            $('.progress-bar').css('width', progressPercent + '%');  // Update progress bar width
+            $('.progress-bar').attr('aria-valuenow', voteCount);  // Update aria-valuenow attribute
+            
+            // Enable/disable buttons based on vote count
+            updateButtonStates(response.vote_count);  // Update all button states
+          },
+          error: function(xhr) {
+            // Show error message with better styling
+            alert(xhr.responseText || 'An error occurred while processing your vote.');  // Show error message
+          }
+        });
+      });
+      
+      // Function to update button states based on vote count
+      function updateButtonStates(voteCount) {
+        var maxVotes = {{ max_votes }};  // Get max votes from template
+        
+        // If at max votes, disable all non-voted buttons
+        if (voteCount >= maxVotes) {
+          $('.vote-btn:not(.voted)').prop('disabled', true);  // Disable non-voted buttons
+        } else {
+          // Otherwise, enable all buttons
+          $('.vote-btn:not(.voted)').prop('disabled', false);  // Enable non-voted buttons
+        }
+        
+        // Always enable voted buttons (to allow removing votes)
+        $('.vote-btn.voted').prop('disabled', false);  // Enable voted buttons
+      }
+    });
+  </script>
+</body>
+</html>
