@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Vote for Your Favorite Photos</title>
+  <title>{{ page_title }}</title> <!-- Use dynamic page title from AdminInfo -->
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <!-- Bootstrap 5 CSS from CDN --> <!-- Updated to Bootstrap 5 for modern components -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -169,7 +169,8 @@
   <!-- Header section with gradient background --> <!-- Created new header section -->
   <div class="page-header">
     <div class="container text-center">
-      <h1 class="page-title mb-3">Vote for Your Favorite Photos</h1>
+      <h1 class="page-title mb-3">{{ page_title }}</h1> <!-- Use dynamic page title from AdminInfo -->
+      <p class="mb-4">{{ page_description }}</p> <!-- Add page description from AdminInfo -->
       <div class="vote-count-display">You have used <span id="user-vote-count">{{ vote_count }}</span> of {{ max_votes }} votes</div>
       <!-- Added progress bar for visual representation of votes -->
       <div class="vote-progress">
