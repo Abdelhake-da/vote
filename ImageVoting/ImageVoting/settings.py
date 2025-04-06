@@ -131,6 +131,10 @@ STATICFILES_DIRS = [
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
+# Django login settings
+LOGIN_URL = 'login'  # URL to redirect to when login is required
+LOGIN_REDIRECT_URL = 'admin_dashboard'  # URL to redirect to after successful login
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 

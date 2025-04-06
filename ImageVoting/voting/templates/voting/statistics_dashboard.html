@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Voting Statistics</title> <!-- Changed title -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Bootstrap 5 CSS from CDN -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Chart.js for creating interactive charts -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Simple auto-refresh every 15 seconds for near real-time updates -->
+  <meta http-equiv="refresh" content="15">
+  <style>
+    /* Add some custom styling to match the vote page */
+    body {
+      font-family: 'Poppins', sans-serif; /* Use the same font as the vote page */
+      background-color: #f8f9fa;
+    }
+    
+    .dashboard-header {
+      background: linear-gradient(135deg, #4361ee, #7209b7);
+      color: white;
+      padding: 2rem 0;
+      border-radius: 0 0 15px 15px;
+      margin-bottom: 2rem;
+    }
+    
+    .admin-card {
+      border-radius: 15px;
+      box-shadow: rgba(0, 0, 0, 0.1) 0px 4px 12px;
+      margin-bottom: 2rem;
+    }
+    
+    .admin-card-header {
+      background: linear-gradient(135deg, #4361ee, #7209b7);
+      color: white;
+      border-radius: 15px 15px 0 0 !important;
+      padding: 1rem 1.5rem;
+    }
+    
+    .table img {
+      border-radius: 8px;
+      box-shadow: rgba(0, 0, 0, 0.1) 0px 2px 8px;
+    }
+
+    /* Add styles for the charts section */
+    .chart-container {
+      position: relative;
+      height: 300px;
+      margin-bottom: 2rem;
+    }
+    
+    .nav-link {
+      color: white;
+      font-weight: 500;
+    }
+    
+    .nav-link:hover {
+      color: rgba(255, 255, 255, 0.8);
+    }
+  </style>
+</head>
+<body>
+  <!-- Header section with navigation -->
+  <div class="dashboard-header">
+    <div class="container">
+      <div class="d-flex justify-content-between align-items-center">
+        <h1 class="mb-2">Voting Statistics</h1> <!-- Changed title -->
+        <div>
+          <a href="{% url 'vote_page' %}" class="btn btn-outline-light me-2">View Voting Page</a>
+          <a href="{% url 'admin_dashboard' %}" class="btn btn-outline-light me-2">Admin Dashboard</a>
+          <a href="{% url 'logout' %}" class="btn btn-outline-light">Logout</a>
+        </div>
+      </div>
+      <p>Current Settings: Max Votes: {{ admin_info.max_votes }}, Page Title: "{{ admin_info.title_of_the_page }}"</p>
+    </div>
+  </div>
+
+  <div class="container my-4">
+    <!-- Charts Section -->
+    <div class="card admin-card mb-4">
+      <div class="card-header admin-card-header">
+        <h4 class="mb-0">Voting Analytics</h4>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-6">
+            <div class="chart-container">
+              <canvas id="votesBarChart"></canvas>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="chart-container">
+              <canvas id="votesPieChart"></canvas>
+            </div>
+          </div>
+        </div>
+        <div class="row mt-4">
+          <div class="col-12">
+            <div class="chart-container">
+              <canvas id="votesTimelineChart"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Voting Results Table -->
+    <div class="card admin-card">
+      <div class="card-header admin-card-header">
+        <h4 class="mb-0">Voting Results</h4>
+      </div>
+      <div class="card-body">
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th>Photo</th>
+              <th>Title</th>
+              <th>Votes</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for photo in photos %}
+            <tr>
+              <td>
+                <img src="{{ photo.image.url }}" alt="{{ photo.title }}" style="max-width: 100px;">
+              </td>
+              <td>{{ photo.title }}</td>
+              <td>{{ photo.votes }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Bootstrap JS and dependencies -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- JavaScript for charts -->
+  <script>
+    // Wait for the DOM to be fully loaded
+    document.addEventListener('DOMContentLoaded', function() {
+      // Get the vote data from the template context
+      const voteDates = {{ vote_dates|safe }};
+      const voteCounts = {{ vote_counts|safe }};
+      
+      // Get the photo data for charts
+      const photoTitles = [{% for photo in photos %}"{{ photo.title }}"{% if not forloop.last %}, {% endif %}{% endfor %}];
+      const photoVotes = [{% for photo in photos %}{{ photo.votes }}{% if not forloop.last %}, {% endif %}{% endfor %}];
+      
+      // Create the timeline chart
+      const timelineCtx = document.getElementById('votesTimelineChart').getContext('2d');
+      new Chart(timelineCtx, {
+        type: 'line',
+        data: {
+          labels: voteDates,
+          datasets: [{
+            label: 'Votes per Day',
+            data: voteCounts,
+            backgroundColor: 'rgba(67, 97, 238, 0.2)',
+            borderColor: 'rgba(67, 97, 238, 1)',
+            borderWidth: 2,
+            tension: 0.3,
+            fill: true
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            title: {
+              display: true,
+              text: 'Votes Over the Last 7 Days',
+              font: {
+                size: 16,
+                family: "'Poppins', sans-serif"
+              }
+            },
+            legend: {
+              position: 'top',
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                precision: 0
+              }
+            }
+          }
+        }
+      });
+      
+      // Create the bar chart for top photos
+      const barCtx = document.getElementById('votesBarChart').getContext('2d');
+      new Chart(barCtx, {
+        type: 'bar',
+        data: {
+          labels: photoTitles.slice(0, 5), // Show top 5 photos
+          datasets: [{
+            label: 'Votes',
+            data: photoVotes.slice(0, 5), // Show top 5 photos
+            backgroundColor: generateColors(5),
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            title: {
+              display: true,
+              text: 'Top 5 Photos by Votes',
+              font: {
+                size: 16,
+                family: "'Poppins', sans-serif"
+              }
+            },
+            legend: {
+              display: false
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                precision: 0
+              }
+            }
+          }
+        }
+      });
+      
+      // Create the pie chart for vote distribution
+      const pieCtx = document.getElementById('votesPieChart').getContext('2d');
+      new Chart(pieCtx, {
+        type: 'pie',
+        data: {
+          labels: photoTitles,
+          datasets: [{
+            label: 'Votes',
+            data: photoVotes,
+            backgroundColor: generateColors(photoTitles.length),
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            title: {
+              display: true,
+              text: 'Vote Distribution',
+              font: {
+                size: 16,
+                family: "'Poppins', sans-serif"
+              }
+            }
+          }
+        }
+      });
+    });
+    
+    // Function to generate random colors for charts
+    function generateColors(count) {
+      const colors = [];
+      const baseColors = [
+        'rgba(67, 97, 238, 0.7)',
+        'rgba(114, 9, 183, 0.7)',
+        'rgba(76, 201, 240, 0.7)',
+        'rgba(247, 37, 133, 0.7)',
+        'rgba(58, 12, 163, 0.7)',
+        'rgba(114, 224, 19, 0.7)',
+        'rgba(255, 122, 69, 0.7)',
+        'rgba(67, 170, 139, 0.7)'
+      ];
+      
+      for (let i = 0; i < count; i++) {
+        colors.push(baseColors[i % baseColors.length]);
+      }
+      
+      return colors;
+    }
+  </script>
+</body>
+</html>
